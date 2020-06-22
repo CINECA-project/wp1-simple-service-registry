@@ -1,0 +1,239 @@
+openapi: 3.0.2
+tags:
+  type: array
+  items:
+    - services
+info:
+  title: GA4GH service-info API specification
+  description: 'A way for a service to describe basic metadata concerning a service alongside a set of capabilities and/or limitations of the service. More information on [GitHub](https://github.com/ga4gh-discovery/ga4gh-service-info/).'
+  version: 1.0.0
+  license:
+    name: Apache 2.0
+    url: 'https://raw.githubusercontent.com/ga4gh-discovery/ga4gh-service-info/develop/LICENSE'
+  contact:
+    name: GA4GH Discovery Networks Team
+    email: ga4gh-discovery-networks@ga4gh.org
+security:
+  - bearerAuth: []
+paths:
+  /services:
+    get:
+      description: Lists known services
+      summary: List services in the registry
+      operationId: getServices
+      tags:
+        - services
+      responses:
+        '200':
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExternalService'
+        '401':
+          $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/schemas/Error'
+        default:
+          $ref: '#/components/schemas/Error'
+  '/services/{serviceId}':
+    get:
+      description: Lists information for specified services
+      summary: Find service in the registry by ID
+      operationId: getServiceById
+      tags:
+        - services
+      parameters:
+        - name: serviceId
+          in: path
+          description: ID of the service to find
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Information about a service with the given ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalService'
+        '401':
+          $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/schemas/Error'
+        default:
+          $ref: '#/components/schemas/Error'
+  /services/types:
+    get:
+      summary: List types of services exposed by the registry
+      description: List all distinct values of the `type` field of exposed services (see `Service`).
+      operationId: getServiceTypes
+      tags:
+        - services
+      responses:
+        '200':
+          description: List of service types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceType'
+        '401':
+          $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/schemas/Error'
+        default:
+          $ref: '#/components/schemas/Error'
+  /service-info:
+    get:
+      description: Provide information about this service
+      summary: Show information about this service. It is assumed that removing this endpoint from a URL will result in a valid URL to query against
+      operationId: getServiceInfo
+      tags:
+        - service-info
+      responses:
+        '200':
+          description: A successful operation to request the service information about this running service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ServiceType:
+      description: Type of a GA4GH service
+      type: object
+      required:
+        - group
+        - artifact
+        - version
+      properties:
+        group:
+          type: string
+          description: "Namespace in reverse domain name format. Use `org.ga4gh` for implementations compliant with official GA4GH specifications. For services with custom APIs not standardized by GA4GH, or implementations diverging from official GA4GH specifications, use a different namespace (e.g. your organization's reverse domain name)."
+          example: org.ga4gh
+        artifact:
+          type: string
+          description: Name of the API or GA4GH specification implemented. Official GA4GH types should be assigned as part of standards approval process. Custom artifacts are supported.
+          example: beacon
+        version:
+          type: string
+          description: Version of the API or specification. GA4GH specifications use semantic versioning.
+          example: 1.0.0
+    Service:
+      description: GA4GH service
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - organization
+        - version
+      properties:
+        id:
+          type: string
+          description: 'Unique ID of this service. Reverse domain name notation is recommended, though not required. The identifier should attempt to be globally unique so it can be used in downstream aggregator services e.g. Service Registry.'
+          example: org.ga4gh.myservice
+        name:
+          type: string
+          description: Name of this service. Should be human readable.
+          example: My project
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        description:
+          type: string
+          description: Description of the service. Should be human readable and provide information about the service.
+          example: This service provides...
+        organization:
+          type: object
+          description: Organization providing the service
+          required:
+            - name
+            - url
+          properties:
+            name:
+              type: string
+              description: Name of the organization responsible for the service
+              example: My organization
+            url:
+              type: string
+              format: uri
+              description: URL of the website of the organization (RFC 3986 format)
+              example: 'https://example.com'
+        contactUrl:
+          type: string
+          format: uri
+          description: 'URL of the contact for the provider of this service, e.g. a link to a contact form (RFC 3986 format), or an email (RFC 2368 format).'
+          example: 'mailto:support@example.com'
+        documentationUrl:
+          type: string
+          format: uri
+          description: 'URL of the documentation of this service (RFC 3986 format). This should help someone learn how to use your service, including any specifics required to access data, e.g. authentication.'
+          example: 'https://docs.myservice.example.com'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp describing when the service was first deployed and available (RFC 3339 format)
+          example: '2019-06-04T12:58:19Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp describing when the service was last updated (RFC 3339 format)
+          example: '2019-06-04T12:58:19Z'
+        environment:
+          type: string
+          description: 'Environment the service is running in. Use this to distinguish between production, development and testing/staging deployments. Suggested values are prod, test, dev, staging. However this is advised and not enforced.'
+          example: test
+        version:
+          type: string
+          description: 'Version of the service being described. Semantic versioning is recommended, but other identifiers, such as dates or commit hashes, are also allowed. The version should be changed whenever the service is updated.'
+          example: 1.0.0
+    ExternalService:
+      description: GA4GH service with a URL
+      allOf:
+        - $ref: '#/components/schemas/Service'
+        - type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              description: |
+                Base URL of the service ([RFC 3986](https://tools.ietf.org/html/rfc3986) format).
+                For REST API services, this is the URL to which all endpoints should be relative. In particular, services implementing GA4GH specifications defined in OAS format (as per the `type` field) should respond to requests constructed by appending relative paths from the specification to this base URL (e.g. `{url}/service-info`). See [API Server and Base URL](https://swagger.io/docs/specification/api-host-and-base-path/) for more information on specifying base URLs in OAS 3.
+              example: 'https://api.example.com/v1'
+    Error:
+      type: object
+      properties:
+        status:
+          format: int32
+          description: |
+            HTTP status code (as per [RFC 7231](https://tools.ietf.org/html/rfc7231)) generated by the server for this occurrence of the problem.
+            This must match the status code in the actual HTTP response. Used for convenience of clients (e.g. to determine what the original status code was in cases where it has been changed by an intermediary or cache or when message bodies persist without HTTP information).
+          example: 500
+          type: integer
+        title:
+          type: string
+          description: |
+            A short, human-readable description of the error.
+            The value should not change from occurrence to occurrence of an error, except for purposes of localization.
+          example: Internal server error
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the error.
+          example: Internal server error

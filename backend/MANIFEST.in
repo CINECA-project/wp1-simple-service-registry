@@ -1,0 +1,10 @@
+include LICENSE
+include README.md
+include service_registry/api/swagger.yml
+
+recursive-include tests *
+recursive-include service_registry *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+
+recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif

@@ -1,0 +1,5 @@
+connexion[swagger-ui]==2.7.0
+SQLAlchemy==1.3.17
+tornado==6.0.4
+decorator==4.4.2
+pyyaml>=4.2b1

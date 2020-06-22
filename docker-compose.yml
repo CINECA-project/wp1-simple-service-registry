@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - '2000:80'
+    environment:
+      - REACT_APP_API_SERVER=http://backend:3000/services
+  backend:
+    container_name: backend
+    build: ./backend
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./backend/data:/data
